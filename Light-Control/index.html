@@ -3,24 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MQTT Light Control</title>
+    <title>Living Room Light Control</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        button { padding: 10px 20px; margin: 5px; font-size: 16px; }
-        #status { margin-top: 20px; font-size: 18px; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            overflow: hidden;
+        }
+        .container {
+            text-align: center;
+            position: relative;
+        }
+        .lamp {
+            width: 100px;
+            height: 200px;
+            background: #333;
+            border-radius: 10px 10px 50px 50px;
+            position: relative;
+            transition: all 0.5s ease;
+            margin-bottom: 20px;
+        }
+        .lamp::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: 10px;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(255, 223, 0, 0.8) 0%, rgba(255, 223, 0, 0) 70%);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .lamp.on {
+            background: #555;
+            box-shadow: 0 0 20px rgba(255, 223, 0, 0.5);
+        }
+        .lamp.on::before {
+            opacity: 1;
+        }
+        .base {
+            width: 120px;
+            height: 20px;
+            background: #222;
+            border-radius: 5px;
+            position: absolute;
+            bottom: -10px;
+            left: -10px;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            background: #0f3460;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+        button:hover {
+            background: #e94560;
+            transform: scale(1.05);
+        }
+        #status {
+            color: #fff;
+            font-size: 18px;
+            margin-top: 20px;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+        /* Living room vibe with subtle floor reflection */
+        .floor {
+            position: absolute;
+            bottom: -100px;
+            width: 300px;
+            height: 50px;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
+            border-radius: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
     </style>
 </head>
 <body>
-    <h1>Light Control</h1>
-    <button onclick="sendCommand('ON')">Turn ON</button>
-    <button onclick="sendCommand('OFF')">Turn OFF</button>
-    <p id="status">Status: Waiting for command...</p>
+    <div class="container">
+        <div class="lamp" id="lamp">
+            <div class="base"></div>
+        </div>
+        <div class="buttons">
+            <button onclick="sendCommand('ON')">Turn ON</button>
+            <button onclick="sendCommand('OFF')">Turn OFF</button>
+        </div>
+        <p id="status">Status: Waiting for command...</p>
+        <div class="floor"></div>
+    </div>
 
     <!-- Include MQTT.js from CDN -->
     <script src="https://unpkg.com/mqtt@5.0.2/dist/mqtt.min.js"></script>
     <script>
-        // Connect to the public Mosquitto test broker
         const client = mqtt.connect('wss://test.mosquitto.org:8081');
+        const lamp = document.getElementById('lamp');
 
         client.on('connect', () => {
             console.log('Connected to MQTT broker');
@@ -35,6 +127,12 @@
             client.publish(topic, command, () => {
                 document.getElementById('status').innerText = `Status: Last command sent - ${command}`;
                 console.log(`Published ${command} to ${topic}`);
+                // Toggle lamp visual state
+                if (command === 'ON') {
+                    lamp.classList.add('on');
+                } else if (command === 'OFF') {
+                    lamp.classList.remove('on');
+                }
             });
         }
     </script>
